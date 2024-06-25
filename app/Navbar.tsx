@@ -11,7 +11,7 @@ export function Navbar() {
           <Link href="/">Generate</Link>
           <Link href="/collection">Collection</Link>
         </nav>
-        <div>Sign In</div>
+        {/* <div>Sign In</div> */}
       </div>
     </div>
   );
