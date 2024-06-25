@@ -1,69 +1,44 @@
-import { mutation, query, internalAction, internalMutation } from "./_generated/server";
-import Replicate from "replicate";
-import { string } from "prop-types";
+import { internal } from "./_generated/api";
+import { internalMutation, mutation, query } from "./_generated/server";
+import { v } from "convex/values";
 
+export const saveSketch = mutation({
+  args: { prompt: v.string(), image: v.string() },
+  handler: async (ctx, { prompt, image }) => {
+    const sketch = await ctx.db.insert("sketches", {
+      prompt,
+    });
 
+    await ctx.scheduler.runAfter(0, internal.generate.generate, {
+      sketchId: sketch,
+      prompt,
+      image,
+    });
 
-export const saveSketch = mutation(
-    async ({ db, scheduler }, { prompt, image }: { prompt: string, image: string }) => {
-        console.log(prompt);
-        const sketch = await db.insert("sketches", {
-            prompt,
-        });
-        
-        await scheduler.runAfter(0, "sketches:generate", {
-            sketchId: sketch._id, 
-            prompt,
-            image,
-        });
-
-        return {
-            sketch
-        };
-    }
-);
-
-export const generate = internalAction(
-    async (
-        {
-            runMutation
-        }, 
-        { 
-            prompt,
-            image,
-            sketchId
-        }: { sketchId: Id<string>; prompt: string, image: string }) => {
-
-    const replicate = new Replicate();
-    const input = {
-        image,
-        prompt,
-        scale: 7,
-        image_resolution: "512",
-        n_prompt: "longbody, lowres, bad anatomy, bad hands, missing fingers, extra fingers, cropped, low quality"
-    };
-    
-    const output = await replicate.run("jagilley/controlnet-scribble:435061a1b5a4c1e26740464bf786efdfa9cb3a3ac488595a2de23e143fdb0117", { input });
-
-    await runMutation("sketches:updateSketchResult", {
-        sketchId,
-        result: output[1]
-    })
-    console.log(output)
+    return sketch;
+  },
 });
 
-export const updateSketchResult = internalMutation(
-    async (
-        { db },
-        { sketchId, result }: { sketchId: Id<string>; result: string }
-    ) => {
-        await db.patch(sketchId, {
-            result
-        });
-    }
-);
+export const getSketch = query({
+  args: { sketchId: v.id("sketches") },
+  handler: (ctx, { sketchId }) => {
+    if (!sketchId) return null;
+    return ctx.db.get(sketchId);
+  },
+});
 
-export const getSketches = query(async ({ db }) => {
-    const sketches = await db.query("sketches").collect();
+export const updateSketchResult = internalMutation({
+  args: { sketchId: v.id("sketches"), result: v.string() },
+  handler: async (ctx, { sketchId, result }) => {
+    await ctx.db.patch(sketchId, {
+      result,
+    });
+  },
+});
+
+export const getSketches = query({
+  handler: async (ctx) => {
+    const sketches = await ctx.db.query("sketches").collect();
     return sketches;
+  },
 });

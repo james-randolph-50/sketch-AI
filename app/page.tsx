@@ -8,7 +8,7 @@ import { ReadableStreamDefaultController } from "stream/web";
 
 export default function Home() {
 
-  const saveSketchMutation = useMutation("sketches:saveSketch")
+  const saveSketchMutation = useMutation("sketches:saveSketch");
 
   const {
     register,
@@ -27,9 +27,8 @@ export default function Home() {
         onSubmit={handleSubmit(async (formData) => {
           if (!canvasRef.current) return;
           const image = await canvasRef.current.exportImage("jpeg");
-          console.log("image: ", image);
           const results = await saveSketchMutation({...formData, image });
-          // console.log(results);
+          
       })}>
         <input {...register("prompt", { required: true })} />
         
