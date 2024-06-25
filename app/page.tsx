@@ -26,6 +26,7 @@ export default function Home() {
     return b._creationTime - a._creationTime;
   });
 
+
   return (
     <main className="flex min-h-screen flex-col items-center justify-between pt-8">
       <div className="container mx-auto flex gap-4">
@@ -42,9 +43,10 @@ export default function Home() {
           {errors.prompt && <span>This field is required</span>}
 
           <Label className="mt-4">Canvas (Draw something below)</Label>
+          
           <ReactSketchCanvas
             ref={canvasRef}
-            style={{ width: 256, height: 256 }}
+            style={{ width: 256, height: 256, border: ".25rem solid black" }}
             strokeWidth={4}
             strokeColor="black"
           />
